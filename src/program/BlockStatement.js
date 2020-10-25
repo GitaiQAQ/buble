@@ -9,6 +9,14 @@ function isUseStrict(node) {
 	return node.expression.value === 'use strict';
 }
 
+function isSuper(node, transforms) {
+	if (transforms.classes) return false;
+	if (!node) return false;
+	if (node.type !== 'ExpressionStatement') return false;
+	if (node.expression.type !== 'CallExpression') return false;
+	return node.expression.callee.type === 'Super';
+}
+
 export default class BlockStatement extends Node {
 	createScope() {
 		this.parentIsFunction = /Function/.test(this.parent.type);
@@ -205,6 +213,8 @@ export default class BlockStatement extends Node {
 
 		let start;
 		if (isUseStrict(this.body[0])) {
+			start = this.body[0].end;
+		} else if (isSuper(this.body[0], transforms)) {
 			start = this.body[0].end;
 		} else if (this.synthetic || this.parent.type === 'Root') {
 			start = this.start;
